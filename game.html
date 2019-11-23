@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>贪吃蛇</title>
+		<style type="text/css">
+			*{margin: 0;padding: 0;}
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript">
+			//地图类
+			(function() {
+				function GameMap(width, height, bgColor) {
+					this.width = width;
+					this.height = height;
+					this.bgColor = bgColor;
+				}
+				GameMap.prototype.init = function() {
+					var divMap = document.createElement('div');
+					divMap.style.width = this.width + 'px';
+					divMap.style.height = this.height + 'px';
+					divMap.style.backgroundColor = this.bgColor;
+					divMap.style.position = 'relative';
+					divMap.style.margin='100px auto 0';
+					divMap.id = 'divMap';
+					document.body.appendChild(divMap);
+				}
+				window.GameMap = GameMap;
+			})();
+
+			//食物类
+			(function() {
+				//食物信息
+				var elements=[];
+				function GameFood(width, height, bgColor) {
+					this.width = width;
+					this.height = height;
+					this.bgColor = bgColor;
+					this.x = 0;
+					this.y = 0;
+				}
+				GameFood.prototype.init = function() {
+					remove();
+					var divMap = document.getElementById('divMap');
+					var div = document.createElement('div');
+					div.style.width = this.width + 'px';
+					div.style.height = this.height + 'px';
+					div.style.backgroundColor = this.bgColor;
+					div.style.position = 'absolute';
+					this.x = parseInt(Math.random() * (divMap.offsetWidth / this.width));
+					this.y = parseInt(Math.random() * (divMap.offsetHeight / this.height));
+					div.style.left = (this.x * this.width) + 'px';
+					div.style.top = (this.y * this.height) + 'px';
+					divMap.appendChild(div);
+					elements.push(div);
+				}
+				window.GameFood = GameFood;
+				function remove(){
+					var divMap=document.getElementById('divMap');
+					for (var i = 0; i < elements.length; i++) {
+						divMap.removeChild(elements[i]);
+					}
+					elements.splice(0);
+				}
+			})();
+			//蛇类
+			(function() {
+				//存储蛇的信息
+				var elements=[];
+				function GameSnake(width, height, dir) {
+					this.width = width;
+					this.height = height;
+					this.dir=dir;
+					this.snakeBody = [{
+							x: 3,
+							y: 2,
+							bgColor: 'red'
+						},
+						{
+							x: 2,
+							y: 2,
+							bgColor: 'skyblue'
+						},
+						{
+							x: 1,
+							y: 2,
+							bgColor: 'blue'
+						}
+					];
+				}
+				//初始化
+				GameSnake.prototype.init = function() {
+					remove();
+					var divMap = document.getElementById('divMap');
+					for (var i = 0; i < this.snakeBody.length; i++) {
+						var div = document.createElement('div');
+						div.style.width = this.width + 'px';
+						div.style.height = this.height + 'px';
+						div.style.backgroundColor = this.snakeBody[i].bgColor;
+						div.style.position = 'absolute';
+						div.style.left = (this.snakeBody[i].x * this.width) + 'px';
+						div.style.top = (this.snakeBody[i].y * this.height) + 'px';
+						divMap.appendChild(div);
+						elements.push(div);
+					}
+				}
+				//蛇移动
+				GameSnake.prototype.move=function(){
+					for (var i = this.snakeBody.length-1; i > 0; i--) {
+						this.snakeBody[i].x=this.snakeBody[i-1].x;
+						this.snakeBody[i].y=this.snakeBody[i-1].y;
+					}
+					//蛇移动的方向
+					switch (this.dir){
+						case 'left':this.snakeBody[0].x-=1;
+							break;
+						case 'right':this.snakeBody[0].x+=1;
+							break;
+						case 'top':this.snakeBody[0].y-=1;
+							break;
+						case 'bottom':this.snakeBody[0].y+=1;
+							break;
+					}
+				}
+				//删除老蛇
+				function remove(){
+					var divMap=document.getElementById('divMap');
+					for (var i = 0; i < elements.length; i++) {
+						divMap.removeChild(elements[i]);
+					}
+					elements.splice(0);
+				}
+				window.GameSnake = GameSnake;
+			})();
+			
+			//游戏类
+			(function(){
+				var gameThis;
+				function Game(){
+					this.gameMap = new GameMap(800, 600, '#ccc');
+					this.gameFood = new GameFood(20, 20, 'green');		
+					this.gameSnake = new GameSnake(20, 20,'right');
+					
+				}
+				//初始化
+				Game.prototype.init=function(){
+					this.gameMap.init();
+					this.gameFood.init();
+					this.gameSnake.init();
+				}
+				//游戏规则
+				Game.prototype.rule=function(){
+					gameThis=this;
+					var timer=setInterval(function(){
+						gameThis.gameSnake.move();
+						gameThis.gameSnake.init();
+						//游戏结束
+						if((gameThis.gameSnake.snakeBody[0].x<0)||(gameThis.gameSnake.snakeBody[0].x>=gameThis.gameMap.width/gameThis.gameSnake.width)||(gameThis.gameSnake.snakeBody[0].y<0)||
+						(gameThis.gameSnake.snakeBody[0].y>=gameThis.gameMap.height/gameThis.gameSnake.height)){
+							clearInterval(timer);
+							var div=document.createElement('div');
+							div.style.width='400px';
+							div.style.height='300px';
+							div.style.backgroundColor='rgba(255,0,0,.5)';
+							div.style.position='absolute';
+							div.style.left='50%';
+							div.style.marginLeft='-200px';
+							div.style.top='50%';
+							div.style.marginTop='-150px';
+							div.style.textAlign='center';
+							document.body.appendChild(div);
+							var h3=document.createElement('h3');
+							h3.innerText='游戏结束';
+							h3.style.color='#fff';
+							h3.style.marginTop='50px';
+							div.appendChild(h3);
+							var btn=document.createElement('button');
+							btn.innerText='再玩一次';
+							btn.style.width='100px';							
+							btn.style.height='30px';
+							btn.style.position='absolute';
+							btn.style.left='50%';
+							btn.style.marginLeft='-50px';
+							btn.style.top='50%';
+							btn.style.marginTop='-15px';
+							btn.onclick=function(){
+								window.location.reload();
+							}
+							div.appendChild(btn);
+						}
+						//吃食物
+						if(gameThis.gameSnake.snakeBody[0].x==gameThis.gameFood.x&&gameThis.gameSnake.snakeBody[0].y==gameThis.gameFood.y){
+							gameThis.gameFood.init();
+							var snaleColor=['orange','yellow','blue','green','cyan','purple'];
+							var c=snaleColor[parseInt(Math.random()*snaleColor.length)];
+							var bg={
+								bgColor:c
+							}
+							gameThis.gameSnake.snakeBody.push(bg);
+						}
+					},100);
+					
+				}
+				document.onkeydown=function(e){
+					switch (e.keyCode){
+						case 37:gameThis.gameSnake.dir='left';
+							break;
+						case 38:gameThis.gameSnake.dir='top';
+							break;
+						case 39:gameThis.gameSnake.dir='right';
+							break;
+						case 40:gameThis.gameSnake.dir='bottom';
+							break;
+					}
+				}
+				window.Game=Game;
+			})();
+			var game=new Game();
+			game.init();
+			game.rule();
+			
+		</script>
+	</body>
+</html>
